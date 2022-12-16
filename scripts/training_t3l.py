@@ -180,9 +180,9 @@ class JoinTranslationTransferLearning(pl.LightningModule):
         metrics = []
         for name in names:
             metric = torch.stack([x[name] for x in outputs]).mean()
-            if self.trainer.accelerator_connector.use_ddp:
-                torch.distributed.all_reduce(metric, op=torch.distributed.ReduceOp.SUM)
-                metric /= self.trainer.world_size
+            # if self.trainer.accelerator_connector.use_ddp:
+            #     torch.distributed.all_reduce(metric, op=torch.distributed.ReduceOp.SUM)
+            #     metric /= self.trainer.world_size
             metrics.append(metric)
         logs = dict(zip(*[names, metrics]))
         self.log("avg_val_accuracy", logs["vaccuracy"])
@@ -237,9 +237,10 @@ class JoinTranslationTransferLearning(pl.LightningModule):
                                            max_input_len=self.args.max_input_len, label_dict=self.label_dict)
             selec_collate_fn = MultiEurlexCorpus_tt.collate_fn
 
-        sampler = torch.utils.data.distributed.DistributedSampler(dataset,
-                                                                  shuffle=is_train) if \
-            self.trainer.accelerator_connector.use_ddp else None
+        # sampler = torch.utils.data.distributed.DistributedSampler(dataset,
+        #                                                           shuffle=is_train) if \
+        #     self.trainer.accelerator_connector.use_ddp else None
+        sampler = None
         # Shuffle or not
         if is_train and (sampler is None):
             is_shuffle = True
@@ -367,7 +368,7 @@ def main(args):
             verbose=True,
             monitor='avg_val_accuracy',
             mode='max',
-            period=1
+            every_n_epochs=1
         )
     else:
         checkpoint_callback = ModelCheckpoint(
@@ -377,7 +378,7 @@ def main(args):
             verbose=True,
             monitor='avg_val_mrp',
             mode='max',
-            period=1
+            every_n_epochs=1
         )
 
     print(args)
@@ -397,7 +398,7 @@ def main(args):
                          callbacks=checkpoint_callback if not args.disable_checkpointing else False,
                          progress_bar_refresh_rate=args.progress_bar,
                          precision=args.precision,
-                         amp_backend=args.amp_backend, amp_level='O2',
+                         amp_backend=args.amp_backend, amp_level='apex',
                          resume_from_checkpoint=args.resume_ckpt,
                          )
     model.model.create_translation_writer(args.int_trans_name)

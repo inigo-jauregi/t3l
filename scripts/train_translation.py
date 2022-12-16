@@ -239,9 +239,9 @@ class LmForTranslation(pl.LightningModule):
         metrics = []
         for name in names:
             metric = torch.stack([x[name] for x in outputs]).mean()
-            if self.trainer.accelerator_connector.use_ddp:
-                torch.distributed.all_reduce(metric, op=torch.distributed.ReduceOp.SUM)
-                metric /= self.trainer.world_size
+            # if self.trainer.accelerator_connector.use_ddp:
+            #     torch.distributed.all_reduce(metric, op=torch.distributed.ReduceOp.SUM)
+            #     metric /= self.trainer.world_size
             metrics.append(metric)
         # Calculate BLEU score
         names += ['BLEU']
@@ -305,9 +305,10 @@ class LmForTranslation(pl.LightningModule):
         dataset = TranslationDataset(hf_dataset=self.hf_datasets[split_name], src_prefix=self.args.src,
                                      tgt_prefix=self.args.tgt, tokenizer=self.tokenizer,
                                      max_input_len=self.args.max_input_len, max_output_len=self.args.max_output_len)
-        sampler = torch.utils.data.distributed.DistributedSampler(dataset,
-                                                                  shuffle=is_train) if \
-            self.trainer.accelerator_connector.use_ddp else None
+        # sampler = torch.utils.data.distributed.DistributedSampler(dataset,
+        #                                                           shuffle=is_train) if \
+        #     self.trainer.accelerator_connector.use_ddp else None
+        sampler = None
         # Shuffle or not
         if is_train and (sampler is None):
             is_shuffle = True
@@ -417,14 +418,14 @@ def main(args):
         verbose=True,
         monitor='BLEU',
         mode='max',
-        period=0
+        every_n_epochs=0
     )
 
     print(args)
 
     args.dataset_size = 203037  # hardcode dataset size. Needed to compute number of steps for the lr scheduler
 
-    trainer = pl.Trainer(gpus=args.gpus, distributed_backend='ddp' if torch.cuda.is_available() else None,
+    trainer = pl.Trainer(gpus=args.gpus, accelerator=None,  # distributed_backend='ddp' if torch.cuda.is_available() else None,
                          track_grad_norm=-1,
                          max_epochs=args.epochs if not args.debug else 100,
                          max_steps=None if not args.debug else 1,
@@ -438,7 +439,7 @@ def main(args):
                          callbacks=checkpoint_callback if not args.disable_checkpointing else False,
                          progress_bar_refresh_rate=args.progress_bar,
                          precision=args.precision,
-                         amp_backend=args.amp_backend, amp_level='O2',
+                         amp_backend=args.amp_backend, amp_level='apex',
                          resume_from_checkpoint=args.resume_ckpt,
                          )
     if not args.test:

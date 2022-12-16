@@ -192,9 +192,9 @@ class LmForTextClassification(pl.LightningModule):
         metrics = []
         for name in names:
             metric = torch.stack([x[name] for x in outputs]).mean()
-            if self.trainer.accelerator_connector.use_ddp:
-                torch.distributed.all_reduce(metric, op=torch.distributed.ReduceOp.SUM)
-                metric /= self.trainer.world_size
+            # if self.trainer.accelerator_connector.use_ddp:
+            #     torch.distributed.all_reduce(metric, op=torch.distributed.ReduceOp.SUM)
+            #     metric /= self.trainer.world_size
             metrics.append(metric)
         logs = dict(zip(*[names, metrics]))
         self.log("avg_val_accuracy", logs["vaccuracy"])
@@ -257,9 +257,10 @@ class LmForTextClassification(pl.LightningModule):
             dataset = MultiEurlexCorpus(hf_dataset=self.hf_datasets[split_name], tokenizer=self.tokenizer,
                                  max_input_len=self.args.max_input_len, label_dict=self.label_dict)
             selec_collate_fn = MultiEurlexCorpus.collate_fn
-        sampler = torch.utils.data.distributed.DistributedSampler(dataset,
-                                                                  shuffle=is_train) if \
-            self.trainer.accelerator_connector.use_ddp else None
+        # sampler = torch.utils.data.distributed.DistributedSampler(dataset,
+        #                                                           shuffle=is_train) if \
+        #     self.trainer.accelerator_connector.use_ddp else None
+        sampler=None
         # Shuffle or not
         if is_train and (sampler is None):
             is_shuffle = True
@@ -322,7 +323,7 @@ class LmForTextClassification(pl.LightningModule):
         parser.add_argument("--precision", type=int, default=32, help="Double precision (64), full precision (32) "
                                                                       "or half precision (16). Can be used on CPU, "
                                                                       "GPU or TPUs.")
-        parser.add_argument("--amp_backend", type=str, default='native', help="The mixed precision backend to "
+        parser.add_argument("--amp_backend", type=str, default='apex', help="The mixed precision backend to "
                                                                               "use ('native' or 'apex')")
         parser.add_argument("--debug", action='store_true', help="debug run")
         parser.add_argument("--resume_ckpt", type=str, help="Path of a checkpoint to resume from")
@@ -378,14 +379,14 @@ def main(args):
         verbose=True,
         monitor='avg_val_accuracy',
         mode='max',
-        period=0,
+        every_n_epochs=0,
     )
 
     print(args)
 
     args.dataset_size = 203037  # hardcode dataset size. Needed to compute number of steps for the lr scheduler
 
-    trainer = pl.Trainer(gpus=args.gpus, distributed_backend='ddp' if torch.cuda.is_available() else None,
+    trainer = pl.Trainer(gpus=args.gpus, accelerator=None, #strategy='ddp' if torch.cuda.is_available() else None,
                          track_grad_norm=-1,
                          max_epochs=args.epochs if not args.debug else 100,
                          max_steps=None if not args.debug else 1,
@@ -399,7 +400,7 @@ def main(args):
                          callbacks=checkpoint_callback if not args.disable_checkpointing else False,
                          progress_bar_refresh_rate=args.progress_bar,
                          precision=args.precision,
-                         amp_backend=args.amp_backend, amp_level='O2',
+                         amp_backend=args.amp_backend, amp_level='apex',
                          resume_from_checkpoint=args.resume_ckpt,
                          )
     if not args.test:

@@ -1,7 +1,7 @@
 import os
 from transformers import AutoConfig, AutoTokenizer, AutoModel
 
-bert_model_name = "facebook/mbart-large-50-one-to-many-mmt"
+bert_model_name = "facebook/mbart-large-50-many-to-one-mmt"
 if os.path.isdir('../pretrained_lm/'+bert_model_name):
     os.mkdir('../pretrained_lm/'+bert_model_name)
 

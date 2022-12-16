@@ -11,7 +11,24 @@ Install required packages with pip:
 python
 ```
 pip install -r requirements.txt
+
+# Install our adapted transformers package
+cd t3l/transformers
+pip install -e .
+cd ../..
 ```
+
+## Data
+
+The XNLI and MultiEurlex datasets and the respective few-shot 10 and few-shot 100
+data splits, as well as the TED talk translation corpus used in the paper
+for the fine-tuning of the MT-LM models of bg-en, el-en and sw-en can be 
+found [here](https://drive.google.com/drive/folders/1ZJTViKBQ4B2PO9OA04PjsT1m1JtEkYLK?usp=sharing).
+
+Downloading MLdoc data requires an approval from 
+[TREC](https://trec.nist.gov/data/reuters/reuters.html) and to follow
+the [script](https://github.com/facebookresearch/MLDoc) provided by 
+the MLdoc paper authors to extract the benchmark dataset.
 
 ## Getting started
 
