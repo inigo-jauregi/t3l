@@ -5,8 +5,7 @@ from torch import nn, Tensor
 from torch.distributions import Categorical
 from transformers import BertConfig, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
 
-from t3l.custom_data_loaders import XNLI_LABEL2ID, MLDOC_LABEL2ID, MARC_LABEL2ID, MULTIEURLEX_LEVEL_1_LABEL2ID, \
-    XNLI_ID2LABEL
+from t3l.custom_data_loaders import XNLI_LABEL2ID, MLDOC_LABEL2ID, MULTIEURLEX_LEVEL_1_LABEL2ID, XNLI_ID2LABEL
 
 
 class NmtPlusLmForTextClassificationConfig(BertConfig):

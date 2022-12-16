@@ -1,1 +1,0 @@
-python scripts/xnli_sh/preprocessing/iwslt_join_tests.py --dataset_path my_datasets/translation/IWSLT_2014_TEDtalks/de-en/de-en --subdatasets tst2010 tst2011 tst2012 --outname test_joined --src de --tgt en

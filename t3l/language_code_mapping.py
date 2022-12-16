@@ -54,8 +54,6 @@ LANGUAGE_CODE_MAPPING = {
 }
 
 LANG2LANG = {
-    'tr': 'az',
     'bg': 'ru',
-    'el': 'mk',
-    'sl': 'cs'
+    'el': 'mk'
 }

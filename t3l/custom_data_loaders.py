@@ -90,6 +90,7 @@ class XNLIDataset(Dataset):
         labels = torch.tensor(labels)
         return sequence_ids, attention_mask, token_type_ids, labels
 
+
 # Variation to be able to translate the premise and hypothesis separatly
 # To be used in the translate and test, and jttl cases.
 class XNLIDataset_tt(Dataset):
@@ -144,151 +145,6 @@ class XNLIDataset_tt(Dataset):
         sequence_ids = torch.nn.utils.rnn.pad_sequence(sequence_ids, batch_first=True, padding_value=1)
         attention_mask = torch.nn.utils.rnn.pad_sequence(attention_mask, batch_first=True, padding_value=0)
 
-        # Maybe one-hot encode the label
-        labels = torch.tensor(labels)
-        return sequence_ids, attention_mask, labels
-
-class MARCcorpus(Dataset):
-    def __init__(self, hf_dataset, tokenizer, max_input_len, label_dict):
-
-        examples = []
-        with open(hf_dataset, encoding='utf-8') as json_reader:
-            for line in json_reader:
-                data_object = json.loads(line)
-                examples.append({'review_title': data_object['review_title'],
-                                 'review_body': data_object['review_body'],
-                                 'stars': data_object['stars']})
-
-        print(label_dict)
-        self.hf_dataset = examples
-        self.label_dict = label_dict
-        self.tokenizer = tokenizer
-        self.max_input_len = max_input_len
-
-        # self.writer_input = open('lightning_input.txt', 'w')
-
-    def __len__(self):
-        return len(self.hf_dataset)
-
-    def __getitem__(self, idx):
-        entry = self.hf_dataset[idx]
-        # # sequence_1_ids = self.tokenizer.encode(entry['review_title'], truncation=True, max_length=self.max_input_len)
-        # sequence_2_ids = self.tokenizer.encode(entry['review_body'], truncation=True, max_length=self.max_input_len)
-        # #
-        # sequence = {}
-        # sequence['input_ids'] = [self.tokenizer.cls_token_id] + sequence_1_ids[:-2] + [self.tokenizer.sep_token_id] + \
-        #                          sequence_2_ids[:-2] + [self.tokenizer.sep_token_id]
-        # # sequence = self.tokenizer(entry['premise'], entry['hypothesis'], truncation=True, padding=True,
-        # #                           max_length=self.max_input_len)
-        #
-        # sequence['attention_mask'] = [1] * len(sequence['input_ids'])
-        # sequence['token_type_ids'] = [0] * (2 + len(sequence_1_ids[:-2])) + [1] * (1 + len(sequence_2_ids[:-2]))
-
-        sequence_ids = self.tokenizer.encode(entry['review_body'], truncation=True, max_length=self.max_input_len)
-
-        sequence = {}
-        sequence['input_ids'] = sequence_ids
-        sequence['attention_mask'] = [1] * len(sequence_ids)
-        sequence['token_type_ids'] = [1] * len(sequence_ids)
-
-        # print(sequence['input_ids'])
-        # translations = [self.tokenizer.decode(t, skip_special_tokens=False) for t in sequence['input_ids']]
-        # print(translations)
-        # self.writer_input.write(" ".join(translations) + '\n')
-        # Check encoded sentence
-        output_label = self.label_dict[entry['stars']]  # Do I need to one-hot encode the output?
-
-        # if self.tokenizer.bos_token_id is None:  # pegasus
-        #     output_ids = [self.tokenizer.pad_token_id] +
-        return torch.tensor(sequence['input_ids']), torch.tensor(sequence['attention_mask']), \
-               torch.tensor(sequence['token_type_ids']), torch.tensor(output_label)
-
-    @staticmethod
-    def collate_fn(batch):
-        # A hack to know if this is bart or pegasus. DDP doesn't like global variables nor class-level memebr variables
-        # if batch[0][0][-1].item() == 2:
-        #     pad_token_id = 1  # AutoTokenizer.from_pretrained('facebook/bart-base').pad_token_id
-        # elif batch[0][0][-1].item() == 1:
-        #     pad_token_id = 0  # AutoTokenizer.from_pretrained('google/pegasus-large').pad_token_id
-        # else:
-        #     assert False
-
-        sequence_ids, attention_mask, token_type_ids, labels = list(zip(*batch))
-        sequence_ids = torch.nn.utils.rnn.pad_sequence(sequence_ids, batch_first=True, padding_value=1)
-        attention_mask = torch.nn.utils.rnn.pad_sequence(attention_mask, batch_first=True, padding_value=0)
-        token_type_ids = torch.nn.utils.rnn.pad_sequence(token_type_ids, batch_first=True, padding_value=0)
-        # Maybe one-hot encode the label
-        labels = torch.tensor(labels)
-        return sequence_ids, attention_mask, token_type_ids, labels
-
-# Variation to be able to translate the premise and hypothesis separatly
-# To be used in the translate and test, and jttl cases.
-class MARCcorpus_tt(Dataset):
-    def __init__(self, hf_dataset, tokenizer, max_input_len, label_dict):
-
-        examples = []
-        with open(hf_dataset, encoding='utf-8') as json_reader:
-            for line in json_reader:
-                data_object = json.loads(line)
-                examples.append({'review_title': data_object['review_title'],
-                                 'review_body': data_object['review_body'],
-                                 'stars': data_object['stars']})
-
-        print(label_dict)
-        self.hf_dataset = examples
-        self.label_dict = label_dict
-        self.tokenizer = tokenizer
-        self.max_input_len = max_input_len
-
-        # self.writer_input = open('lightning_input.txt', 'w')
-
-    def __len__(self):
-        return len(self.hf_dataset)
-
-    def __getitem__(self, idx):
-        entry = self.hf_dataset[idx]
-        # sequence_1_ids = self.tokenizer.encode(entry['review_title'].strip(), truncation=True,
-        #                                        max_length=self.max_input_len)
-        # sequence_2_ids = self.tokenizer.encode(entry['review_body'].strip(), truncation=True,
-        #                                        max_length=self.max_input_len)
-        # #
-        # sequence = {}
-        # sequence['input_ids'] = [self.tokenizer.cls_token_id] + sequence_1_ids[:-2] + [self.tokenizer.sep_token_id] + \
-        #                          sequence_2_ids[:-2] + [self.tokenizer.sep_token_id]
-        # # sequence = self.tokenizer(entry['premise'], entry['hypothesis'], truncation=True, padding=True,
-        # #                           max_length=self.max_input_len)
-        #
-        # sequence['attention_mask'] = [1] * len(sequence['input_ids'])
-
-        sequence_ids = self.tokenizer.encode(entry['review_body'].strip(), truncation=True, max_length=self.max_input_len)
-        sequence = {}
-        sequence['input_ids'] = sequence_ids
-        sequence['attention_mask'] = [1] * len(sequence_ids)
-
-        # print(sequence['input_ids'])
-        # translations = [self.tokenizer.decode(t, skip_special_tokens=False) for t in sequence['input_ids']]
-        # print(translations)
-        # self.writer_input.write(" ".join(translations) + '\n')
-        # Check encoded sentence
-        output_label = self.label_dict[entry['stars']]  # Do I need to one-hot encode the output?
-
-        # if self.tokenizer.bos_token_id is None:  # pegasus
-        #     output_ids = [self.tokenizer.pad_token_id] +
-        return torch.tensor(sequence['input_ids']), torch.tensor(sequence['attention_mask']), torch.tensor(output_label)
-
-    @staticmethod
-    def collate_fn(batch):
-        # A hack to know if this is bart or pegasus. DDP doesn't like global variables nor class-level memebr variables
-        # if batch[0][0][-1].item() == 2:
-        #     pad_token_id = 1  # AutoTokenizer.from_pretrained('facebook/bart-base').pad_token_id
-        # elif batch[0][0][-1].item() == 1:
-        #     pad_token_id = 0  # AutoTokenizer.from_pretrained('google/pegasus-large').pad_token_id
-        # else:
-        #     assert False
-
-        sequence_ids, attention_mask, labels = list(zip(*batch))
-        sequence_ids = torch.nn.utils.rnn.pad_sequence(sequence_ids, batch_first=True, padding_value=1)
-        attention_mask = torch.nn.utils.rnn.pad_sequence(attention_mask, batch_first=True, padding_value=0)
         # Maybe one-hot encode the label
         labels = torch.tensor(labels)
         return sequence_ids, attention_mask, labels
@@ -354,6 +210,7 @@ class MLDocCorpus(Dataset):
         labels = torch.tensor(labels)
         return sequence_ids, attention_mask, token_type_ids, labels
 
+
 class MLDocCorpus_tt(Dataset):
     def __init__(self, hf_dataset, tokenizer, max_input_len, label_dict):
 
@@ -410,6 +267,7 @@ class MLDocCorpus_tt(Dataset):
         # Maybe one-hot encode the label
         labels = torch.tensor(labels)
         return sequence_ids, attention_mask, labels
+
 
 class MultiEurlexCorpus(Dataset):
     def __init__(self, hf_dataset, tokenizer, max_input_len, label_dict):
@@ -472,6 +330,7 @@ class MultiEurlexCorpus(Dataset):
         # Maybe one-hot encode the label
         labels = torch.nn.utils.rnn.pad_sequence(labels, batch_first=True, padding_value=0).squeeze(1)
         return sequence_ids, attention_mask, token_type_ids, labels
+
 
 class MultiEurlexCorpus_tt(Dataset):
     def __init__(self, hf_dataset, tokenizer, max_input_len, label_dict):

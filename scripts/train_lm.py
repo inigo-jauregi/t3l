@@ -20,8 +20,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 # from pytorch_lightning.overrides.data_parallel import LightningDistributedDataParallel
 
 from t3l.evaluation_metrics import text_classification_metrics, multi_label_text_classification_metrics
-from t3l.custom_data_loaders import XNLIDataset, MARCcorpus, MLDocCorpus, MultiEurlexCorpus, \
-    XNLI_LABEL2ID, MLDOC_LABEL2ID, MARC_LABEL2ID, MULTIEURLEX_LEVEL_1_LABEL2ID
+from t3l.custom_data_loaders import XNLIDataset, MLDocCorpus, MultiEurlexCorpus, \
+    XNLI_LABEL2ID, MLDOC_LABEL2ID, MULTIEURLEX_LEVEL_1_LABEL2ID
 
 
 def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=-100):
@@ -59,8 +59,6 @@ class LmForTextClassification(pl.LightningModule):
             self.num_out_classes = len(XNLI_LABEL2ID)
         elif args.task == 'MLdoc':
             self.num_out_classes = len(MLDOC_LABEL2ID)
-        elif args.task == 'MARC':
-            self.num_out_classes = len(MARC_LABEL2ID)
         elif args.task == 'MultiEurlex':
             self.num_out_classes = len(MULTIEURLEX_LEVEL_1_LABEL2ID)
 
@@ -255,10 +253,6 @@ class LmForTextClassification(pl.LightningModule):
             dataset = MLDocCorpus(hf_dataset=self.hf_datasets[split_name], tokenizer=self.tokenizer,
                                   max_input_len=self.args.max_input_len, label_dict=self.label_dict)
             selec_collate_fn = MLDocCorpus.collate_fn
-        elif self.args.task == 'MARC':
-            dataset = MARCcorpus(hf_dataset=self.hf_datasets[split_name], tokenizer=self.tokenizer,
-                                 max_input_len=self.args.max_input_len, label_dict=self.label_dict)
-            selec_collate_fn = MARCcorpus.collate_fn
         elif self.args.task == 'MultiEurlex':
             dataset = MultiEurlexCorpus(hf_dataset=self.hf_datasets[split_name], tokenizer=self.tokenizer,
                                  max_input_len=self.args.max_input_len, label_dict=self.label_dict)
@@ -354,8 +348,6 @@ def main(args):
     # Assign labels manually -> For XNLI
     if args.task == 'XNLI':
         label_dict = XNLI_LABEL2ID
-    elif args.task == 'MARC':
-        label_dict = MARC_LABEL2ID
     elif args.task == 'MLdoc':
         label_dict = MLDOC_LABEL2ID
     elif args.task == 'MultiEurlex':

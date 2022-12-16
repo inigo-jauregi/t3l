@@ -19,8 +19,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from t3l.nmt_plus_lm import NmtPlusLmForTextClassification, NmtPlusLmForTextClassificationConfig
 from t3l.language_code_mapping import LANGUAGE_CODE_MAPPING, LANG2LANG
 from t3l.evaluation_metrics import text_classification_metrics, multi_label_text_classification_metrics
-from t3l.custom_data_loaders import XNLIDataset_tt, MARCcorpus_tt, MLDocCorpus_tt, MultiEurlexCorpus_tt, \
-    XNLI_LABEL2ID, MLDOC_LABEL2ID, MARC_LABEL2ID, MULTIEURLEX_LEVEL_1_LABEL2ID
+from t3l.custom_data_loaders import XNLIDataset_tt, MLDocCorpus_tt, MultiEurlexCorpus_tt, \
+    XNLI_LABEL2ID, MLDOC_LABEL2ID, MULTIEURLEX_LEVEL_1_LABEL2ID
 
 
 def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=-100):
@@ -232,10 +232,6 @@ class JoinTranslationTransferLearning(pl.LightningModule):
             dataset = MLDocCorpus_tt(hf_dataset=self.hf_datasets[split_name], tokenizer=self.tokenizer,
                                   max_input_len=self.args.max_input_len, label_dict=self.label_dict)
             selec_collate_fn = MLDocCorpus_tt.collate_fn
-        elif self.args.task == 'MARC':
-            dataset = MARCcorpus_tt(hf_dataset=self.hf_datasets[split_name], tokenizer=self.tokenizer,
-                                 max_input_len=self.args.max_input_len, label_dict=self.label_dict)
-            selec_collate_fn = MARCcorpus_tt.collate_fn
         elif self.args.task == 'MultiEurlex':
             dataset = MultiEurlexCorpus_tt(hf_dataset=self.hf_datasets[split_name], tokenizer=self.tokenizer,
                                            max_input_len=self.args.max_input_len, label_dict=self.label_dict)
@@ -346,8 +342,6 @@ def main(args):
     # Assign labels manually -> For XNLI
     if args.task == 'XNLI':
         label_dict = XNLI_LABEL2ID
-    elif args.task == 'MARC':
-        label_dict = MARC_LABEL2ID
     elif args.task == 'MLdoc':
         label_dict = MLDOC_LABEL2ID
     elif args.task == 'MultiEurlex':
