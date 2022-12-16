@@ -1,0 +1,1 @@
+python scripts/xnli_sh/preprocessing/iwslt_preprocessing_test.py --dataset_path my_datasets/translation/IWSLT_2014_TEDtalks/sl-en/sl-en/IWSLT14.TED.tst2012.sl-en --year tst2012 --src sl --tgt en --src_code cs_CZ --tgt_code en_XX --tokenizer pretrained_lm/facebook-mbart-large-50-many-to-one-mmt

@@ -1,0 +1,10 @@
+/.python-version
+/venv/
+/pretrained_lm/
+/my_datasets/
+/scripts/language_model/
+/scripts/logs/
+/scripts/results/
+/scripts/summarization/
+/scripts/tmp_trainer/
+/models/
