@@ -98,3 +98,11 @@ python -m scripts.training_t3l --task XNLI \
 To perform inference (test) over the test sets with the trained
 models, simply add the `--test` flag and the `--from_pretrained` argument
 providing the path to the trained checkpoint.
+
+## Citation
+
+Please cite our paper in your work:
+
+```python
+pending...
+```
