@@ -312,7 +312,7 @@ class JoinTranslationTransferLearning(pl.LightningModule):
         parser.add_argument("--precision", type=int, default=32, help="Double precision (64), full precision (32) "
                                                                       "or half precision (16). Can be used on CPU, "
                                                                       "GPU or TPUs.")
-        parser.add_argument("--amp_backend", type=str, default='native', help="The mixed precision backend to "
+        parser.add_argument("--amp_backend", type=str, default='apex', help="The mixed precision backend to "
                                                                               "use ('native' or 'apex')")
         parser.add_argument("--debug", action='store_true', help="debug run")
         parser.add_argument("--resume_ckpt", type=str, help="Path of a checkpoint to resume from")

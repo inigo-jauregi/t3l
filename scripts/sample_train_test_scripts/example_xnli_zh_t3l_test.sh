@@ -5,7 +5,7 @@ DEV=my_datasets/sequence_classification/xnli/dev-zh-mini_test.tsv
 TEST=my_datasets/sequence_classification/xnli/test-zh.tsv  # Make sure this is the test dataset
 
 
-OUT=models/xnli/t3l/zh/T3L_FS-10_seed_1234
+OUT=models/xnli/t3l/zh/T3L_FS-10
 PRETRAINED_LM_EN=models/xnli/pretrained_lms/en/mBART_xnli_english_TC-LM/test/checkpoints*
 PRETRAINED_MT=facebook/mbart-large-50-many-to-one-mmt
 

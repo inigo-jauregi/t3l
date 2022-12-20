@@ -2,6 +2,7 @@
 
 # Script to train the joint model
 import os
+import shutil
 import argparse
 import random
 import numpy as np
@@ -65,6 +66,7 @@ class LmForTextClassification(pl.LightningModule):
         config_lm = AutoConfig.from_pretrained(self.args.model_lm_path)
         config_lm.update_from_string(f"num_labels={self.num_out_classes}")
         print(config_lm.num_labels)
+        self.config_lm = config_lm
         self.model = AutoModelForSequenceClassification.from_pretrained(self.args.model_lm_path,
                                                                         num_labels=self.num_out_classes)
         print(type(self.tokenizer))
@@ -79,7 +81,7 @@ class LmForTextClassification(pl.LightningModule):
             self.lm_type = 'other'
 
         # self.model.decoder_start_token_id = self.tokenizer.bos_token_id
-        self.tokenizer.save_pretrained(self.args.save_dir, self.args.save_prefix)
+        # self.tokenizer.save_pretrained(self.args.save_dir, self.args.save_prefix)
         self.train_dataloader_object = self.val_dataloader_object = self.test_dataloader_object = None
 
         # self.writer = open('lightning_preds.txt', 'w')
@@ -218,7 +220,10 @@ class LmForTextClassification(pl.LightningModule):
 
     def save_language_model(self, accuracy):
         path_save = os.path.join(self.args.save_dir, self.args.save_prefix, "checkpoints_" + str(accuracy))
-        self.model.save_pretrained(path_save, True)
+        self.tokenizer.save_pretrained(path_save)
+        # self.tokenizer.save_vocabulary(path_save)
+        self.model.save_pretrained(path_save)
+        # self.config_lm.save_pretrained(path_save)
 
     def test_step(self, batch, batch_nb):
         return self.validation_step(batch, batch_nb)
@@ -394,7 +399,7 @@ def main(args):
                          accumulate_grad_batches=args.grad_accum,
                          gradient_clip_val=args.max_grad_norm,
                          val_check_interval=args.val_every if not args.debug else 1,
-                         num_sanity_val_steps=2 if not args.debug else 0,
+                         num_sanity_val_steps=0,
                          check_val_every_n_epoch=1 if not args.debug else 1,
                          logger=logger,
                          callbacks=checkpoint_callback if not args.disable_checkpointing else False,
@@ -405,6 +410,26 @@ def main(args):
                          )
     if not args.test:
         trainer.fit(model)
+        # Keep only the best model
+        path_save = os.path.join(model.args.save_dir, model.args.save_prefix)
+        file_list = os.listdir(path_save)
+        print(file_list)
+        # Check which one has the highest score
+        best_number = 0
+        best_filename = None
+        for filename in file_list:
+            if filename.startswith('checkpoint'):
+                number = float(filename.split('(')[1].split(',')[0])
+                if number > best_number:
+                    best_number = number
+                    best_filename = filename
+        file_list.remove(best_filename)
+        print(f'Best -> {best_filename}')
+        # Delete the rest of the files
+        for filename in file_list:
+            if filename.startswith('checkpoint'):
+                shutil.rmtree(f'{path_save}/{filename}')
+
     else:
         trainer.test(model)
 

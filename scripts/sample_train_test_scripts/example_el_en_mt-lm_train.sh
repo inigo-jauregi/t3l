@@ -1,8 +1,8 @@
 #!/bin/bash
 
-TRAIN=my_datasets/translation/IWSLT_2014_TEDtalks/el-en/train
-DEV=my_datasets/translation/IWSLT_2014_TEDtalks/el-en/dev
-TEST=my_datasets/translation/IWSLT_2014_TEDtalks/el-en/test
+TRAIN=my_datasets/translation/IWSLT_2014_TEDtalks/el-en/el-en/train
+DEV=my_datasets/translation/IWSLT_2014_TEDtalks/el-en/el-en/dev
+TEST=my_datasets/translation/IWSLT_2014_TEDtalks/el-en/el-en/test
 
 SRC=el
 TGT=en

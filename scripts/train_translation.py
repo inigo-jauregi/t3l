@@ -2,6 +2,7 @@
 
 # Script to train the joint model
 import os
+import shutil
 import argparse
 import random
 import numpy as np
@@ -156,7 +157,7 @@ class LmForTranslation(pl.LightningModule):
 
             # print(self.tokenizer._src_lang)
             # print(self.tokenizer.tgt_lang)
-        self.tokenizer.save_pretrained(self.args.save_dir, self.args.save_prefix)
+        # self.tokenizer.save_pretrained(self.args.save_dir, self.args.save_prefix)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(self.args.model_lm_path)
 
         self.train_dataloader_object = self.val_dataloader_object = self.test_dataloader_object = None
@@ -276,6 +277,7 @@ class LmForTranslation(pl.LightningModule):
 
     def save_language_model(self, bleu_score):
         path_save = os.path.join(self.args.save_dir, self.args.save_prefix, "checkpoints_" + str(bleu_score))
+        self.tokenizer.save_pretrained(path_save)
         self.model.save_pretrained(path_save, True)
 
     def test_step(self, batch, batch_nb):
@@ -373,7 +375,7 @@ class LmForTranslation(pl.LightningModule):
         parser.add_argument("--precision", type=int, default=32, help="Double precision (64), full precision (32) "
                                                                       "or half precision (16). Can be used on CPU, "
                                                                       "GPU or TPUs.")
-        parser.add_argument("--amp_backend", type=str, default='native', help="The mixed precision backend to "
+        parser.add_argument("--amp_backend", type=str, default='apex', help="The mixed precision backend to "
                                                                               "use ('native' or 'apex')")
         parser.add_argument("--debug", action='store_true', help="debug run")
         parser.add_argument("--resume_ckpt", type=str, help="Path of a checkpoint to resume from")
@@ -433,7 +435,7 @@ def main(args):
                          accumulate_grad_batches=args.grad_accum,
                          gradient_clip_val=args.max_grad_norm,
                          val_check_interval=args.val_every if not args.debug else 1,
-                         num_sanity_val_steps=2 if not args.debug else 0,
+                         num_sanity_val_steps=0,
                          check_val_every_n_epoch=1 if not args.debug else 1,
                          logger=logger,
                          callbacks=checkpoint_callback if not args.disable_checkpointing else False,
@@ -444,6 +446,25 @@ def main(args):
                          )
     if not args.test:
         trainer.fit(model)
+        # Keep only the best model
+        path_save = os.path.join(model.args.save_dir, model.args.save_prefix)
+        file_list = os.listdir(path_save)
+        print(file_list)
+        # Check which one has the highest score
+        best_number = 0
+        best_filename = None
+        for filename in file_list:
+            if filename.startswith('checkpoint'):
+                number = float(filename.split('(')[1].split(',')[0])
+                if number > best_number:
+                    best_number = number
+                    best_filename = filename
+        file_list.remove(best_filename)
+        print(f'Best -> {best_filename}')
+        # Delete the rest of the files
+        for filename in file_list:
+            if filename.startswith('checkpoint'):
+                shutil.rmtree(f'{path_save}/{filename}')
     trainer.test(model)
 
 
