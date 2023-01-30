@@ -1,4 +1,4 @@
-# T3L: Translate and test transfer learning for cross-lingual text classification
+# T3L: Translate-and-test transfer learning for cross-lingual text classification
 
 The code reporitory for the paper research paper with the same title.
 
