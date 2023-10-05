@@ -1,6 +1,6 @@
 # T3L: Translate-and-test transfer learning for cross-lingual text classification
 
-The code reporitory for the paper research paper with the same title.
+The code reporitory for the paper research [paper published in the Transactions of the Association for Computational Linguistics (TACL)](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00593/117584/T3L-Translate-and-Test-Transfer-Learning-for-Cross).
 
 ## Installation
 
@@ -103,6 +103,19 @@ providing the path to the trained checkpoint.
 
 Please cite our paper in your work:
 
-```python
-pending...
+```latex
+@article{10.1162/tacl_a_00593,
+    author = {Jauregi Unanue, Inigo and Haffari, Gholamreza and Piccardi, Massimo},
+    title = "{T3L: Translate-and-Test Transfer Learning for Cross-Lingual Text Classification}",
+    journal = {Transactions of the Association for Computational Linguistics},
+    volume = {11},
+    pages = {1147-1161},
+    year = {2023},
+    month = {09},
+    abstract = "{Cross-lingual text classification leverages text classifiers trained in a high-resource language to perform text classification in other languages with no or minimal fine-tuning (zero/ few-shots cross-lingual transfer). Nowadays, cross-lingual text classifiers are typically built on large-scale, multilingual language models (LMs) pretrained on a variety of languages of interest. However, the performance of these models varies significantly across languages and classification tasks, suggesting that the superposition of the language modelling and classification tasks is not always effective. For this reason, in this paper we propose revisiting the classic “translate-and-test” pipeline to neatly separate the translation and classification stages. The proposed approach couples 1) a neural machine translator translating from the targeted language to a high-resource language, with 2) a text classifier trained in the high-resource language, but the neural machine translator generates “soft” translations to permit end-to-end backpropagation during fine-tuning of the pipeline. Extensive experiments have been carried out over three cross-lingual text classification datasets (XNLI, MLDoc, and MultiEURLEX), with the results showing that the proposed approach has significantly improved performance over a competitive baseline.}",
+    issn = {2307-387X},
+    doi = {10.1162/tacl_a_00593},
+    url = {https://doi.org/10.1162/tacl\_a\_00593},
+    eprint = {https://direct.mit.edu/tacl/article-pdf/doi/10.1162/tacl\_a\_00593/2159097/tacl\_a\_00593.pdf},
+}
 ```
